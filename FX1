@@ -1,0 +1,105 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Events = ReplicatedStorage.Events
+local TestingGamepasses = ReplicatedStorage.TestingGamepasses
+local RepLibrary = require(ReplicatedStorage.Modules.RepLibrary)
+
+local PickCandy = Events.Gameplay.PickCandy
+local BuySeed = Events.UI.BuySeed
+local GetSeedShopData = Events.Data.GetSeedShopData
+local SellInventory = Events.Data.SellInventory
+local BackpackSpace = TestingGamepasses.BackpackSpace
+local VIP = TestingGamepasses.VIP
+
+local function safeInvoke(remote, ...)
+    local success, result = pcall(function()
+        return remote:InvokeServer(...)
+    end)
+    return success, result
+end
+
+local plot
+coroutine.wrap(function()
+    while true do
+        plot = RepLibrary:GetPlotFromPlayer(game.Players.LocalPlayer)
+        if plot then break end
+        task.wait(1)
+    end
+end)()
+
+coroutine.wrap(function()
+    while not plot do task.wait() end
+    local Plants = plot:WaitForChild("Plants")
+
+    while true do
+        for _, plant in ipairs(Plants:GetChildren()) do
+            local Candy = plant:FindFirstChild("Candy")
+            if Candy then
+                for _, candyModel in ipairs(Candy:GetChildren()) do
+                    if candyModel:IsA("Model") and (candyModel:GetAttribute("Progress") or 0) >= 1 then
+                        safeInvoke(PickCandy, plant.Name, candyModel.Name)
+                    end
+                end
+            end
+        end
+        task.wait(0.1)
+    end
+end)()
+
+coroutine.wrap(function()
+    while true do
+        local success, seedData = safeInvoke(GetSeedShopData)
+
+        if success and type(seedData) == "table" then
+
+            local seedList = {}
+            for seedName, seedInfo in pairs(seedData) do
+                if type(seedInfo) == "table" and seedInfo.Price then
+                    table.insert(seedList, {
+                        name = seedName,
+                        price = seedInfo.Price,
+                        stock = seedInfo.Stock or math.huge
+                    })
+                end
+            end
+
+            table.sort(seedList, function(a, b) return a.price < b.price end)
+
+            for _, seed in ipairs(seedList) do
+                if seed.stock > 0 then
+                    local buySuccess, buyResult = safeInvoke(BuySeed, seed.name, 1)
+
+                    if not buySuccess or (buyResult and string.find(tostring(buyResult):lower(), "not enough")) then
+                        break
+                    end
+
+                    task.wait(0.2)
+                end
+            end
+        end
+        task.wait(5)
+    end
+end)()
+
+coroutine.wrap(function()
+    while true do
+        BackpackSpace.Value = "909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090909090"
+        task.wait(0.05)
+    end
+end)()
+
+coroutine.wrap(function()
+    while true do
+        VIP.Value = "true"
+        task.wait(0.05)
+    end
+end)()
+
+coroutine.wrap(function()
+    while true do
+        safeInvoke(SellInventory)
+        task.wait(0.05)
+    end
+end)()
