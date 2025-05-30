@@ -1,1 +1,20 @@
 
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
+    local Window = OrionLib:MakeWindow({Name = "FxZ Hub V1", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
+
+    local Tab = Window:MakeTab({
+        Name = "Main",
+        Icon = "",
+        PremiumOnly = false
+    })
+
+    Tab:AddButton({
+	Name = "Duped Sheckels",
+	Callback = function()
+      		print("button pressed")
+          loadstring(game:HttpGet('https://raw.githubusercontent.com/TheLastqer/V123/refs/heads/main/FX1'))()
+  	end    
+})
+
+
+    
